@@ -109,7 +109,7 @@ export function Mailbox({ petId }: MailboxProps) {
                         className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] opacity-40 hover:opacity-100 transition-opacity mb-6"
                     >
                         <ArrowLeft size={14} />
-                        <span>Return to Sanctuary</span>
+                        <span>Return to Dashboard</span>
                     </button>
                     <div className="flex items-center gap-4">
                         <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary shadow-inner">

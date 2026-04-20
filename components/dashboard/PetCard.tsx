@@ -4,9 +4,11 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Clock, Heart, Trash2, X, AlertTriangle } from 'lucide-react'
+import { ArrowRight, Sparkles, Heart, MoreHorizontal, Trash2, X, AlertTriangle } from 'lucide-react'
 import { differenceInDays } from 'date-fns'
 import { Database } from '@/types/database.types'
+import { getCurrentZone, getZoneDisplayName } from '@/lib/zone-manager'
+import { TIME_RATIO } from '@/lib/time-constants'
 
 type Pet = Database['public']['Tables']['pets']['Row']
 
@@ -23,8 +25,12 @@ export function PetCard({ pet, lastFeedDate, drCompleted, canWriteLetter }: PetC
     const [showRemembranceAlert, setShowRemembranceAlert] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
 
+    const [showDropdown, setShowDropdown] = useState(false)
     const passedDate = pet.passed_date ? new Date(pet.passed_date) : new Date()
     const daysSince = differenceInDays(new Date(), passedDate)
+    const toThereOnDay = Math.max(1, Math.floor(daysSince / TIME_RATIO) + 1)
+    const currentZoneKey = getCurrentZone(toThereOnDay)
+    const currentZoneName = getZoneDisplayName(currentZoneKey)
     const photoUrl = pet.photos?.[0] || '/api/placeholder/400/300'
 
     const handleDelete = async () => {
@@ -73,7 +79,7 @@ export function PetCard({ pet, lastFeedDate, drCompleted, canWriteLetter }: PetC
 
                     {/* Status Badge */}
                     <div className="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-blue-600 shadow-sm">
-                        In Sanctuary
+                        {currentZoneName}
                     </div>
 
                     <div className="absolute top-4 right-4 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-red-400 shadow-sm">
@@ -91,10 +97,10 @@ export function PetCard({ pet, lastFeedDate, drCompleted, canWriteLetter }: PetC
                             </p>
                         </div>
                         <div className="text-right">
-                            <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Time Apart</div>
+                            <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">ToThereOn World</div>
                             <div className="text-lg font-bold text-blue-600 flex items-center justify-end gap-1">
-                                <Clock className="w-4 h-4" />
-                                {daysSince} Days
+                                <Sparkles className="w-4 h-4" />
+                                Day {toThereOnDay}
                             </div>
                         </div>
                     </div>
@@ -120,24 +126,40 @@ export function PetCard({ pet, lastFeedDate, drCompleted, canWriteLetter }: PetC
                                 Pet Feed <ArrowRight className="w-4 h-4" />
                             </motion.button>
                         )}
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setShowDeleteConfirm(true)}
-                            className="py-4 px-4 rounded-2xl bg-gray-50/80 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all"
-                            title="Delete pet"
-                        >
-                            <Trash2 className="w-5 h-5" />
-                        </motion.button>
+                        <div className="relative">
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => setShowDropdown(v => !v)}
+                                className="py-4 px-4 rounded-2xl bg-gray-50/80 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all"
+                                title="More options"
+                            >
+                                <MoreHorizontal className="w-5 h-5" />
+                            </motion.button>
+                            {showDropdown && (
+                                <div
+                                    className="absolute right-0 mt-1 w-36 bg-white rounded-2xl shadow-lg border border-gray-100 z-20 overflow-hidden"
+                                    onMouseLeave={() => setShowDropdown(false)}
+                                >
+                                    <button
+                                        onClick={() => { setShowDropdown(false); setShowDeleteConfirm(true) }}
+                                        className="w-full text-left px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                        Delete
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Status Row (US-B2) */}
                     <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between gap-2 flex-wrap">
                         <div className="text-xs text-gray-400">
                             {lastFeedDate ? (
-                                <span>Last update: {new Date(lastFeedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                <span>Heard from {pet.name} on {new Date(lastFeedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                             ) : (
-                                <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-semibold">New update available</span>
+                                <span className="px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full font-semibold">A new story awaits</span>
                             )}
                         </div>
                         <div className="text-xs font-semibold">

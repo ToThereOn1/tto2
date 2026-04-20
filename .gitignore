@@ -56,3 +56,4 @@ ci/
 playwright-report/
 test-results/
 .claude/
+.omc/

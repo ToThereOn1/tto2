@@ -7,7 +7,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { PersonaProfile, Pet } from '@/lib/types/database'
 import { LLM_TIERS } from './llm-client'
-import { getZoneForDay, ZONE_NAMES } from './time-engine'
+import { getCurrentZone, getZoneDisplayName } from './zone-manager'
 
 interface StatusEvent {
     type: string
@@ -83,8 +83,8 @@ export async function generateLetterReply(
         apiKey: process.env.ANTHROPIC_API_KEY,
     })
 
-    const zone = getZoneForDay(currentToThereOnDay)
-    const zoneName = ZONE_NAMES[zone] || zone
+    const zone = getCurrentZone(currentToThereOnDay)
+    const zoneName = getZoneDisplayName(zone)
 
     const recentEventsText = recentEvents.length > 0
         ? `\n**RECENT ACTIVITIES:**\n${recentEvents.map(e => `- ${e.description}`).join('\n')}`
@@ -144,8 +144,8 @@ function generateMockLetter(
     persona: PersonaProfile,
     currentToThereOnDay: number
 ): LetterGenerationResult {
-    const zone = getZoneForDay(currentToThereOnDay)
-    const zoneName = ZONE_NAMES[zone] || 'ToThereOn World'
+    const zone = getCurrentZone(currentToThereOnDay)
+    const zoneName = getZoneDisplayName(zone) || 'ToThereOn World'
 
     const opening = persona.letter_generation_guidelines.opening_style || `Dear Guardian,`
     const closing = persona.letter_generation_guidelines.closing_style || `With all my love, ${petName}`

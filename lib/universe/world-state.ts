@@ -13,8 +13,8 @@
  */
 
 import { createAdminClient } from '@/lib/supabase/server';
-import { getZoneForDay } from '@/lib/time-engine-v2';
 import { calculateToThereOnTime } from '@/lib/time-engine-v2';
+import { getCurrentZone } from '@/lib/zone-manager';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -84,7 +84,7 @@ export class WorldStateService {
             for (const pet of pets) {
                 const startDate = pet.passed_date || pet.created_at;
                 const { currentDay } = calculateToThereOnTime(startDate);
-                const zoneId = getZoneForDay(currentDay);
+                const zoneId = getCurrentZone(currentDay);
                 const allowsInteraction = pet.allow_world_interaction !== false;
 
                 if (!petsByZone[zoneId]) petsByZone[zoneId] = [];

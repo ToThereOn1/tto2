@@ -270,7 +270,7 @@ function LoginContent() {
                         className="text-xs font-bold uppercase tracking-widest flex items-center gap-2 hover:opacity-70 transition-opacity"
                         style={{ color: 'var(--color-text-tertiary)' }}
                     >
-                        <ArrowLeft className="w-3 h-3" /> Back to Sanctuary
+                        <ArrowLeft className="w-3 h-3" /> Back to ToThereOn
                     </Link>
                     <Link
                         href="/support"

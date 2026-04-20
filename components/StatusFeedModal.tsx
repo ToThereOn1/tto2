@@ -128,7 +128,7 @@ export function StatusFeedModal({ isOpen, onClose, petId, petName, petImage }: S
                         </div>
                         <div>
                             <h2 className="text-xl font-extrabold text-slate-900 tracking-tight" style={{ fontFamily: 'var(--font-sans)' }}>{petName}'s Journey</h2>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60">Sanctuary Live Feed</p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60">World Feed</p>
                         </div>
                     </div>
                     <button

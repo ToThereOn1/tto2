@@ -92,7 +92,7 @@ const FAQ_CATEGORIES = [
         items: [
             {
                 q: "What's the difference between Free and Basic?",
-                a: "**Free** gives you a gentle start: 1 companion and weekly updates from the Sanctuary. You'll know they arrived safely and hear from them once a week — but letters are not included. **Basic ($9.99/month)** brings you closer: updates twice a week, 4 letters a month, 4 replies, and their full journal from the day they arrived. Most people write their first letter within days of joining."
+                a: "**Free** gives you a gentle start: 1 companion and weekly updates from ToThereOn World. You'll know they arrived safely and hear from them once a week — but letters are not included. **Basic ($9.99/month)** brings you closer: updates twice a week, 4 letters a month, 4 replies, and their full journal from the day they arrived. Most people write their first letter within days of joining."
             },
             {
                 q: "If I cancel, does my pet disappear?",
@@ -100,7 +100,7 @@ const FAQ_CATEGORIES = [
             },
             {
                 q: "Can I try it for free?",
-                a: "Yes. The Free plan lets you register your pet and receive weekly updates about their life in the Sanctuary. No credit card required. You'll know they arrived. You'll hear from them. When you're ready to write your first letter, Basic is there."
+                a: "Yes. The Free plan lets you register your pet and receive weekly updates about their life in ToThereOn World. No credit card required. You'll know they arrived. You'll hear from them. When you're ready to write your first letter, Basic is there."
             }
         ]
     },

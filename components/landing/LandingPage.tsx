@@ -145,7 +145,7 @@ export function LandingPage({ isLoggedIn, userName, defaultPetId, canAddPet = tr
                             A Digital Memorial
                         </span>
                         <br />
-                        Sanctuary in ToThereOn World
+                        A Place in ToThereOn World
                     </motion.h1>
 
                     <motion.p

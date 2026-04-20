@@ -21,7 +21,12 @@ export function getZoneDisplayName(zoneKey: string): string {
         eternity_forest: 'Eternity Forest',
         crystal_lake: 'Crystal Lake',
         sunset_hill: 'Sunset Hill',
-        // Legacy mappings
+        // Legacy mappings (for DB records created before zone unification)
+        meadow: 'Crystal Meadow',
+        forest: 'Eternity Forest',
+        lake: 'Crystal Lake',
+        cloud_peaks: 'Sunset Hill',
+        arrival_gate: 'Central Plaza',
         rainbow_valley: 'Crystal Meadow',
         memory_village: 'Crystal Lake',
         peaceful_sanctuary: 'Sunset Hill',

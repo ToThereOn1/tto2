@@ -3,7 +3,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { AI_CONFIG } from '@/lib/ai-config';
 import { retrieveRelevantMemories, embedAndStoreLetter } from '@/lib/memory-store';
 import { createAdminClient } from '@/lib/supabase/server';
-import { calculateToThereOnTime, getZoneForDay } from '@/lib/time-engine';
+import { calculateToThereOnTime } from '@/lib/time-engine';
+import { getCurrentZone, getZoneDisplayName } from '@/lib/zone-manager';
 import { WORLDBOOK } from '@/lib/worldview-constants';
 import { FORBIDDEN_WORDS, GUARDIAN_DEPICTION_RULES, REFLECTION_POOL_RULES } from '@/lib/world-bible';
 import { detectLanguageFromText, getLanguageInstruction } from '@/lib/language-detector';
@@ -381,7 +382,7 @@ export async function generateLetterReply(letterId: string, petId?: string, inst
         const startDate = pet.passed_date || pet.created_at;
         const { currentDay, currentZone } = {
             currentDay: Math.floor(calculateToThereOnTime(startDate).currentDay),
-            currentZone: getZoneForDay(Math.floor(calculateToThereOnTime(startDate).currentDay))
+            currentZone: getCurrentZone(Math.floor(calculateToThereOnTime(startDate).currentDay))
         };
 
         timeline = {

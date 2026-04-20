@@ -44,12 +44,13 @@ export async function GET(
         if (petError || !pet) throw new Error('Pet not found');
 
         // 1. Calculate Timeline Stats
-        const { calculateToThereOnTime, getTimeUntilNextDay, getZoneForDay, ZONE_NAMES } = await import('@/lib/time-engine-v2');
+        const { calculateToThereOnTime, getTimeUntilNextDay } = await import('@/lib/time-engine-v2');
+        const { getCurrentZone, getZoneDisplayName } = await import('@/lib/zone-manager');
         const startDate = pet.passed_date || pet.created_at;
         const timeOffset = pet.time_offset_hours || 0;
 
         const { currentDay, progress } = calculateToThereOnTime(startDate, timeOffset);
-        const currentZone = getZoneForDay(currentDay);
+        const currentZone = getCurrentZone(currentDay);
         const timeUntilNext = getTimeUntilNextDay(startDate, timeOffset);
 
         const timelineStats = {
@@ -58,7 +59,7 @@ export async function GET(
             progress: Math.round(progress * 100),
             timeUntilNext,
             currentZone,
-            currentZoneName: ZONE_NAMES[currentZone] || currentZone
+            currentZoneName: getZoneDisplayName(currentZone)
         };
 
         // 2. Fetch Status Events (Literary Feed)
@@ -163,7 +164,7 @@ export async function GET(
                 description: event.event_description || '',
                 content: event.event_description || '',
                 zone: event.zone || 'memory_village',
-                zoneName: ZONE_NAMES[event.zone] || event.zone || 'Memory Village',
+                zoneName: getZoneDisplayName(event.zone || 'crystal_meadow'),
                 createdAt: event.created_at,
                 isMock: false,
                 mood: event.mood || 'peaceful',

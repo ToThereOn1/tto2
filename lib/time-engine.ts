@@ -87,6 +87,7 @@ export function getTimeUntilNextDay(startDate: string | Date, timeOffsetHours: n
     return `${Math.max(0, minutesLeft)} minutes`;
 }
 
+/** @deprecated Use getCurrentZone() from '@/lib/zone-manager' instead */
 export function getZoneForDay(day: number): string {
     // Simple zone progression
     if (day <= 1) return 'arrival_gate';

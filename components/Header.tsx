@@ -33,7 +33,7 @@ export function Header({ isLoggedIn = false, userName }: HeaderProps) {
                     <>
                         <div className="flex items-center gap-6 pr-6 border-r border-slate-200">
                             <Link href="/dashboard" className="text-sm font-bold uppercase tracking-widest hover:text-primary transition-colors">
-                                Sanctuary
+                                Dashboard
                             </Link>
                             <Link href="/dashboard/mailbox" className="text-sm font-bold uppercase tracking-widest hover:text-primary transition-colors">
                                 Mailbox
@@ -83,7 +83,7 @@ export function Header({ isLoggedIn = false, userName }: HeaderProps) {
                         {isLoggedIn ? (
                             <>
                                 <Link href="/dashboard" className="py-4 px-6 rounded-2xl hover:bg-primary/5 text-sm font-bold uppercase tracking-widest">
-                                    Sanctuary
+                                    Dashboard
                                 </Link>
                                 <Link href="/dashboard/mailbox" className="py-4 px-6 rounded-2xl hover:bg-primary/5 text-sm font-bold uppercase tracking-widest">
                                     Mailbox

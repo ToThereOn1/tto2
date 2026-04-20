@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
-import { calculateToThereOnDay, getZoneForDay } from '@/lib/time-engine-v2'
+import { calculateToThereOnDay } from '@/lib/time-engine-v2'
 import { generateStatusEvent, generateArrivalEvent, calculateTothereonDay, determineEventType } from '@/lib/event-generator'
 import type { StatusEventContext } from '@/lib/event-generator'
 import { getCurrentZone } from '@/lib/zone-manager'

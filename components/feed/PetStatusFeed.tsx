@@ -502,7 +502,7 @@ export function PetStatusFeed({ petId, initialData, canWriteLetter: serverCanWri
                     </div>
 
                     <div className="inline-flex flex-col items-center gap-4 bg-white/40 backdrop-blur-xl border border-white/60 p-6 rounded-[32px] shadow-sm">
-                        <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Sanctuary Time</div>
+                        <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">ToThereOn Time</div>
                         <div className="flex items-baseline gap-2">
                             <span className="text-4xl font-extrabold text-slate-900 tracking-tighter">Day {timeline.currentDay}</span>
                         </div>
