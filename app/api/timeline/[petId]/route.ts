@@ -45,7 +45,7 @@ export async function GET(
 
         // 1. Calculate Timeline Stats
         const { calculateToThereOnTime, getTimeUntilNextDay } = await import('@/lib/time-engine-v2');
-        const { getCurrentZone, getZoneDisplayName } = await import('@/lib/zone-manager');
+        const { getCurrentZone, getZoneDisplayName, getTimeOfDay, getTimeAtmosphere } = await import('@/lib/zone-manager');
         const startDate = pet.passed_date || pet.created_at;
         const timeOffset = pet.time_offset_hours || 0;
 
@@ -213,6 +213,7 @@ export async function GET(
         );
 
         // Return the structure PetStatusFeed AND MailboxPage expects
+        const serverTimeOfDay = getTimeOfDay();
         return NextResponse.json({
             pet: {
                 id: pet.id,
@@ -227,6 +228,11 @@ export async function GET(
             timeline: timelineStats,
             events: events,
             microEvents: microEvents || [],
+            worldState: {
+                timeOfDay: serverTimeOfDay,  // server UTC — client overrides via useWorldTime
+                atmosphere: getTimeAtmosphere(serverTimeOfDay),
+                currentZoneName: getZoneDisplayName(currentZone),
+            },
             success: true
         });
 
