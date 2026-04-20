@@ -33,11 +33,11 @@ export const LETTER_STATUSES = {
 
 // ─── Comment System ────────────────────────────────────────────────────
 export const COMMENT_LIMITS = {
-    /** Max pet replies per feed cycle (3 Earth days) by tier. Comments themselves are unlimited. */
+    /** Max pet replies per feed cycle by tier. Comments themselves are unlimited. */
     MAX_REPLIES_PER_CYCLE: {
         free: 2,
-        basic: 5,
-        premium: 10,
+        basic: 3,
+        premium: 5,
     },
     /** Reply delay range (hours). Pet replies arrive 2-6h after comment submission. */
     REPLY_DELAY_MIN_HOURS: 2,
@@ -49,9 +49,9 @@ export const COMMENT_LIMITS = {
 
 // ─── Feed Frequency (Earth days between feeds) ─────────────────────────
 export const FEED_FREQUENCY: Record<string, number> = {
-    free: 3,      // 3 Earth days (주 2회) — 신규 유저 첫 경험 개선을 위해 basic과 동일
-    basic: 3,     // 3 Earth days (주 2회)
-    premium: 3,   // 3 Earth days (주 2회)
+    free: 2,      // 2 Earth days (주 3-4회) — 마이크로 이벤트와 함께 기본 체험 제공
+    basic: 1,     // 1 Earth day (매일) — 핵심 유료 차별화
+    premium: 1,   // 1 Earth day (매일)
 }
 
 // ─── Learning Stages (7-stage system) ───────────────────────────────────
