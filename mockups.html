@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ToThereOn Feed — Layout Mockups</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'Segoe UI', sans-serif; background: #f0ede8; color: #2d2d2d; }
+
+  h1 { text-align: center; padding: 32px; font-size: 22px; color: #5a4a3a; }
+
+  .section { padding: 24px 40px; }
+  .section-title {
+    font-size: 13px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #9b8b7a; margin-bottom: 20px;
+    border-bottom: 1px solid #d8cfc5; padding-bottom: 10px;
+  }
+
+  .row { display: flex; gap: 32px; flex-wrap: wrap; margin-bottom: 40px; }
+
+  /* ── PHONE FRAME ── */
+  .phone {
+    width: 320px; background: #fff; border-radius: 32px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.15);
+    overflow: hidden; flex-shrink: 0;
+  }
+  .phone-bar {
+    background: #fff; padding: 14px 20px 8px;
+    border-bottom: 1px solid #f0ede8;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .phone-bar .back { font-size: 18px; color: #9b8b7a; cursor: pointer; }
+  .phone-bar .title { font-size: 15px; font-weight: 600; }
+  .phone-body { padding: 0; overflow: auto; max-height: 600px; }
+
+  /* ── FEED CARD ── */
+  .feed-card {
+    border-bottom: 1px solid #f0ede8;
+    padding: 16px 20px;
+  }
+  .feed-meta {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: linear-gradient(135deg, #c9a97a, #e8d5b0);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .feed-name { font-size: 14px; font-weight: 600; }
+  .feed-day { font-size: 11px; color: #9b8b7a; }
+  .feed-text { font-size: 14px; line-height: 1.65; color: #3d3028; }
+  .feed-text .highlight {
+    color: #8b6a4a; font-weight: 600; border-bottom: 1px dotted #c9a97a;
+    cursor: pointer;
+  }
+  .feed-footer {
+    margin-top: 10px; display: flex; gap: 16px;
+    font-size: 12px; color: #b0a090;
+  }
+
+  /* ── ZONE MILESTONE CARD ── */
+  .milestone-card {
+    margin: 0 16px 0;
+    background: linear-gradient(135deg, #f5f0e8, #ede4d4);
+    border: 1px solid #d8cfc5; border-radius: 14px;
+    padding: 16px; text-align: center;
+    margin-bottom: 0;
+  }
+  .milestone-zone-emoji { font-size: 28px; margin-bottom: 6px; }
+  .milestone-title { font-size: 13px; font-weight: 700; color: #6b5040; }
+  .milestone-subtitle { font-size: 11px; color: #9b8b7a; margin-bottom: 8px; }
+  .milestone-desc { font-size: 12px; color: #6b5040; line-height: 1.5; }
+
+  .milestone-wrapper {
+    border-bottom: 1px solid #f0ede8;
+    padding: 14px 0;
+  }
+
+  /* ── NPC TOOLTIP ── */
+  .tooltip-demo {
+    position: relative; display: inline-block;
+  }
+  .tooltip-box {
+    position: absolute; top: 28px; left: -10px; z-index: 10;
+    background: #fff; border: 1px solid #d8cfc5;
+    border-radius: 12px; padding: 12px; width: 180px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.12);
+    font-size: 12px;
+  }
+  .tooltip-box .t-name { font-weight: 700; font-size: 13px; color: #3d3028; }
+  .tooltip-box .t-role { color: #9b8b7a; font-size: 11px; margin-bottom: 6px; }
+  .tooltip-box .t-desc { color: #5a4a3a; line-height: 1.5; }
+
+  /* ── ZONE BANNER ── */
+  .zone-banner {
+    background: linear-gradient(90deg, #e8f4e8, #d4ecd4);
+    border-bottom: 1px solid #b8d8b8;
+    padding: 10px 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .zone-banner .z-icon { font-size: 20px; }
+  .zone-banner .z-name { font-size: 13px; font-weight: 700; color: #3a5a3a; }
+  .zone-banner .z-day { font-size: 11px; color: #6a8a6a; }
+  .zone-banner .z-npcs { margin-left: auto; display: flex; gap: 6px; }
+  .zone-banner .npc-pill {
+    background: #fff; border: 1px solid #b8d8b8;
+    border-radius: 20px; padding: 3px 8px;
+    font-size: 11px; color: #4a6a4a;
+  }
+
+  /* ── DESKTOP FRAME ── */
+  .desktop {
+    width: 700px; background: #fff; border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.12);
+    overflow: hidden; flex-shrink: 0;
+  }
+  .desktop-bar {
+    background: #fff; padding: 14px 24px;
+    border-bottom: 1px solid #f0ede8;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .desktop-body { display: flex; }
+  .desktop-feed { flex: 1; border-right: 1px solid #f0ede8; }
+  .desktop-sidebar {
+    width: 200px; padding: 16px; background: #faf8f5;
+  }
+  .sidebar-widget {
+    background: #fff; border: 1px solid #e8e0d8;
+    border-radius: 12px; padding: 14px;
+    margin-bottom: 12px;
+  }
+  .sidebar-widget .w-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: #9b8b7a; margin-bottom: 10px;
+  }
+  .sidebar-widget .w-zone {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  }
+  .sidebar-widget .w-zone-name { font-size: 13px; font-weight: 600; color: #3d3028; }
+  .sidebar-widget .w-day { font-size: 11px; color: #9b8b7a; }
+  .sidebar-widget .w-npcs { display: flex; flex-direction: column; gap: 6px; }
+  .sidebar-widget .w-npc {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: #5a4a3a;
+  }
+
+  /* ── LABEL ── */
+  .label {
+    background: #5a4a3a; color: #fff; font-size: 12px; font-weight: 700;
+    padding: 4px 12px; border-radius: 20px; display: inline-block;
+    margin-bottom: 12px;
+  }
+  .desc-text { font-size: 13px; color: #6b5a4a; line-height: 1.6; max-width: 320px; }
+</style>
+</head>
+<body>
+
+<h1>ToThereOn Feed — World Lore UX Mockups</h1>
+
+<!-- ── OPTION 1: Zone Milestone Post ── -->
+<div class="section">
+  <div class="section-title">방식 1-C — Zone Milestone Post (피드에 자동 삽입되는 존 이동 카드)</div>
+  <div class="row">
+    <div>
+      <div class="label">방식 1-C</div>
+      <p class="desc-text">
+        펫이 새 Zone에 진입할 때(Day 3, 10, 30) 자동으로 특별 카드가 피드에 삽입됩니다.<br><br>
+        페이스북의 "X가 서울로 이사했습니다" 이벤트 카드와 유사한 느낌.
+        유저는 스크롤하다가 자연스럽게 세계관 지도를 머릿속에 그립니다.
+      </p>
+    </div>
+    <div class="phone">
+      <div class="phone-bar">
+        <span class="back">←</span>
+        <span class="title">Mochi's Feed</span>
+      </div>
+      <div class="phone-body">
+        <!-- Normal feed post -->
+        <div class="feed-card">
+          <div class="feed-meta">
+            <div class="avatar">🐾</div>
+            <div>
+              <div class="feed-name">Mochi</div>
+              <div class="feed-day">Day 2 · Crystal Meadow</div>
+            </div>
+          </div>
+          <div class="feed-text">
+            The grass here smells different from anything I remember. Not bad — just new.
+            I kept circling the same patch near the gate until Granny Shell told me it was okay to walk further.
+          </div>
+          <div class="feed-footer">
+            <span>💌 Write a letter</span>
+            <span>Day 2</span>
+          </div>
+        </div>
+
+        <!-- MILESTONE CARD -->
+        <div class="milestone-wrapper">
+          <div class="milestone-card">
+            <div class="milestone-zone-emoji">🌲</div>
+            <div class="milestone-title">Entered Eternity Forest</div>
+            <div class="milestone-subtitle">Mochi · Day 3 in ToThereOn World</div>
+            <div class="milestone-desc">
+              Ancient trees that remember everything. Every step through the roots feels like walking through a memory.
+            </div>
+          </div>
+        </div>
+
+        <!-- Next feed post -->
+        <div class="feed-card">
+          <div class="feed-meta">
+            <div class="avatar">🐾</div>
+            <div>
+              <div class="feed-name">Mochi</div>
+              <div class="feed-day">Day 3 · Eternity Forest</div>
+            </div>
+          </div>
+          <div class="feed-text">
+            The trees are enormous here. One of them had a hollow that smelled faintly like our old sofa.
+            I stayed there for a while.
+          </div>
+          <div class="feed-footer">
+            <span>💌 Write a letter</span>
+            <span>Day 3</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── OPTION 2: NPC Tooltip ── -->
+<div class="section">
+  <div class="section-title">방식 2-B — NPC Tap Tooltip (NPC 이름 탭 → 캐릭터 카드 팝업)</div>
+  <div class="row">
+    <div>
+      <div class="label">방식 2-B</div>
+      <p class="desc-text">
+        피드 포스트에서 NPC 이름이 밑줄+강조로 표시됩니다.<br><br>
+        탭(모바일) / 호버(데스크탑)하면 캐릭터 소개 카드가 팝업됩니다.<br><br>
+        유저가 궁금할 때만 확인 → 피드 흐름 방해 없음.
+      </p>
+    </div>
+    <div class="phone">
+      <div class="phone-bar">
+        <span class="back">←</span>
+        <span class="title">Mochi's Feed</span>
+      </div>
+      <div class="phone-body">
+        <div class="feed-card" style="position:relative;">
+          <div class="feed-meta">
+            <div class="avatar">🐾</div>
+            <div>
+              <div class="feed-name">Mochi</div>
+              <div class="feed-day">Day 1 · Crystal Meadow</div>
+            </div>
+          </div>
+          <div class="feed-text">
+            I woke up to a slow green light.
+            <span class="tooltip-demo">
+              <span class="highlight">Granny Shell</span>
+              <div class="tooltip-box">
+                <div class="t-name">🐢 Granny Shell</div>
+                <div class="t-role">Arrival Greeter</div>
+                <div class="t-desc">The first face every new arrival sees. She stands by the Arriving Gate, warm and unhurried.</div>
+              </div>
+            </span>
+            was already there, sitting near the gate like she had been waiting.
+            She didn't say anything at first — just nodded.
+          </div>
+          <div class="feed-footer">
+            <span>💌 Write a letter</span>
+            <span>Day 1</span>
+          </div>
+        </div>
+
+        <div class="feed-card">
+          <div class="feed-meta">
+            <div class="avatar">🐾</div>
+            <div>
+              <div class="feed-name">Mochi</div>
+              <div class="feed-day">Day 2 · Crystal Meadow</div>
+            </div>
+          </div>
+          <div class="feed-text">
+            <span class="highlight">Pip</span> came by in the afternoon.
+            She said a letter was already on its way through the Waterway — mine would be the first to glow.
+          </div>
+          <div class="feed-footer">
+            <span>💌 Write a letter</span>
+            <span>Day 2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── OPTION 3: Zone Banner (Top) ── -->
+<div class="section">
+  <div class="section-title">방식 3-A — Zone Banner (피드 상단 고정 배너)</div>
+  <div class="row">
+    <div>
+      <div class="label">방식 3-A</div>
+      <p class="desc-text">
+        피드 상단에 항상 현재 Zone + 활성 NPC가 표시됩니다.<br><br>
+        스크롤해도 사라지지 않는 "You are here" 배너.<br><br>
+        유저는 스크롤하는 내내 세계관 맥락을 유지합니다.
+      </p>
+    </div>
+    <div class="phone">
+      <div class="phone-bar">
+        <span class="back">←</span>
+        <span class="title">Mochi's Feed</span>
+      </div>
+      <div class="phone-body">
+        <!-- Zone Banner -->
+        <div class="zone-banner">
+          <span class="z-icon">🌿</span>
+          <div>
+            <div class="z-name">Crystal Meadow</div>
+            <div class="z-day">Day 2 · Zone 1 of 4</div>
+          </div>
+          <div class="z-npcs">
+            <span class="npc-pill">🐢 Granny</span>
+            <span class="npc-pill">📬 Pip</span>
+          </div>
+        </div>
+
+        <div class="feed-card">
+          <div class="feed-meta">
+            <div class="avatar">🐾</div>
+            <div>
+              <div class="feed-name">Mochi</div>
+              <div class="feed-day">Day 2 · Crystal Meadow</div>
+            </div>
+          </div>
+          <div class="feed-text">
+            The grass here smells different from anything I remember. Not bad — just new. I kept circling the same patch near the gate.
+          </div>
+          <div class="feed-footer">
+            <span>💌 Write a letter</span>
+          </div>
+        </div>
+
+        <div class="feed-card">
+          <div class="feed-meta">
+            <div class="avatar">🐾</div>
+            <div>
+              <div class="feed-name">Mochi</div>
+              <div class="feed-day">Day 1 · Crystal Meadow</div>
+            </div>
+          </div>
+          <div class="feed-text">
+            Granny Shell was already there, sitting near the gate like she had been waiting for a while.
+          </div>
+          <div class="feed-footer">
+            <span>💌 Write a letter</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── OPTION 4: Desktop Sidebar ── -->
+<div class="section">
+  <div class="section-title">방식 3-D — Sidebar Widget (데스크탑 사이드바)</div>
+  <div class="row">
+    <div>
+      <div class="label">방식 3-D (데스크탑)</div>
+      <p class="desc-text">
+        데스크탑에서 피드 오른쪽에 사이드바 위젯이 표시됩니다.<br><br>
+        트위터 트렌딩 사이드바처럼 현재 Zone, 활성 NPC,
+        다음 Zone까지 남은 일수 등이 표시됩니다.<br><br>
+        모바일에선 숨김.
+      </p>
+    </div>
+    <div class="desktop">
+      <div class="desktop-bar">
+        <span style="font-size:18px;color:#9b8b7a;">←</span>
+        <span style="font-size:15px;font-weight:600;margin-left:8px;">Mochi's Feed</span>
+      </div>
+      <div class="desktop-body">
+        <div class="desktop-feed">
+          <div class="feed-card">
+            <div class="feed-meta">
+              <div class="avatar">🐾</div>
+              <div>
+                <div class="feed-name">Mochi</div>
+                <div class="feed-day">Day 2 · Crystal Meadow</div>
+              </div>
+            </div>
+            <div class="feed-text">
+              The grass here smells different from anything I remember. Not bad — just new. I kept circling the same patch near the gate until Granny Shell told me it was okay to walk further.
+            </div>
+            <div class="feed-footer"><span>💌 Write a letter</span></div>
+          </div>
+          <div class="feed-card">
+            <div class="feed-meta">
+              <div class="avatar">🐾</div>
+              <div>
+                <div class="feed-name">Mochi</div>
+                <div class="feed-day">Day 1 · Crystal Meadow</div>
+              </div>
+            </div>
+            <div class="feed-text">
+              Granny Shell was already there, sitting near the gate like she had been waiting a long time.
+            </div>
+            <div class="feed-footer"><span>💌 Write a letter</span></div>
+          </div>
+        </div>
+        <div class="desktop-sidebar">
+          <div class="sidebar-widget">
+            <div class="w-title">Current Zone</div>
+            <div class="w-zone">
+              <span style="font-size:20px;">🌿</span>
+              <div>
+                <div class="w-zone-name">Crystal Meadow</div>
+                <div class="w-day">Day 2 of 4 here</div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:#9b8b7a;line-height:1.5;">
+              Where new arrivals first open their eyes. Next: Eternity Forest (Day 3)
+            </div>
+          </div>
+          <div class="sidebar-widget">
+            <div class="w-title">Active Today</div>
+            <div class="w-npcs">
+              <div class="w-npc"><span>🐢</span> Granny Shell</div>
+              <div class="w-npc"><span>📬</span> Pip</div>
+            </div>
+          </div>
+          <div class="sidebar-widget">
+            <div class="w-title">Waterway</div>
+            <div style="font-size:12px;color:#5a4a3a;line-height:1.5;">
+              Letter delivery active.<br>Next arrival: ~2 days
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── COMBINED / RECOMMENDATION ── -->
+<div class="section">
+  <div class="section-title">권장 조합 — 1-C (Zone Milestone) + 2-B (NPC Tooltip)</div>
+  <div class="row">
+    <div>
+      <div class="label">권장 조합</div>
+      <p class="desc-text">
+        <strong>가장 자연스럽고 구현 부담이 낮음.</strong><br><br>
+        ① Zone 이동 시 마일스톤 카드가 피드에 자동 삽입<br>
+        → 세계 지리를 스크롤하다가 자연스럽게 습득<br><br>
+        ② NPC 이름에 탭하면 캐릭터 카드 팝업<br>
+        → 궁금한 사람만 확인, 나머지는 피드 그대로<br><br>
+        두 가지 모두 레이아웃 변경 없음.<br>
+        피드가 주인공으로 유지됨.
+      </p>
+    </div>
+    <div class="phone">
+      <div class="phone-bar">
+        <span class="back">←</span>
+        <span class="title">Mochi's Feed</span>
+      </div>
+      <div class="phone-body">
+        <div class="feed-card">
+          <div class="feed-meta">
+            <div class="avatar">🐾</div>
+            <div>
+              <div class="feed-name">Mochi</div>
+              <div class="feed-day">Day 2 · Crystal Meadow</div>
+            </div>
+          </div>
+          <div class="feed-text">
+            <span class="tooltip-demo">
+              <span class="highlight">Pip</span>
+            </span>
+            came by in the afternoon.
+            She said a letter was already glowing on its way through the Waterway.
+          </div>
+          <div class="feed-footer"><span>💌 Write a letter</span></div>
+        </div>
+
+        <div class="milestone-wrapper">
+          <div class="milestone-card">
+            <div class="milestone-zone-emoji">🌲</div>
+            <div class="milestone-title">Entered Eternity Forest</div>
+            <div class="milestone-subtitle">Mochi · Day 3 in ToThereOn World</div>
+            <div class="milestone-desc">
+              Ancient trees that remember everything. Every step feels like walking through a memory.
+            </div>
+          </div>
+        </div>
+
+        <div class="feed-card">
+          <div class="feed-meta">
+            <div class="avatar">🐾</div>
+            <div>
+              <div class="feed-name">Mochi</div>
+              <div class="feed-day">Day 3 · Eternity Forest</div>
+            </div>
+          </div>
+          <div class="feed-text">
+            The trees are enormous here. One of them had a hollow that smelled faintly like our old sofa. I stayed there for a while.
+          </div>
+          <div class="feed-footer"><span>💌 Write a letter</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="height:60px;"></div>
+</body>
+</html>

@@ -1,0 +1,65 @@
+{
+  "common": {
+    "appName": "ToThereOn World",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try Again"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "mailbox": "Mailbox",
+    "settings": "Settings"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "signInWith": "Sign in with {{provider}}",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithFacebook": "Continue with Facebook",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "welcomeBack": "Welcome Back",
+    "createAccount": "Create Account"
+  },
+  "landing": {
+    "heroTitle": "Not a goodbye,",
+    "heroTitleBreak": "but a three days of journey.",
+    "heroSubtitle": "Every 3 days in your world is 1 full day of life in ToThereOn",
+    "syncTitle": "Synchronized Souls",
+    "syncDescription": "Every 3 days in your world is 1 full day of life in ToThereOn. While you work, sleep, and live, your pet is exploring their new home at their own pace."
+  },
+  "steps": {
+    "registerPet": {
+      "title": "Register Pet",
+      "description": "Provide basic info to begin the journey of meeting your pet. Register basics first, then share your pet's unique stories.",
+      "cta": "Get Started"
+    },
+    "deepRemembrance": {
+      "title": "Deep Remembrance",
+      "description": "Recall the unique details that define your pet's spirit. We'll weave your precious memories into a heart-felt, living image.",
+      "cta": "Begin Journey"
+    },
+    "writeLetter": {
+      "title": "Write a Letter",
+      "description": "Write a letter to your pet and receive a reply filled with love. Reconnect through the beautiful stories only the two of you share.",
+      "cta": "Subscribe to Write"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "noNotifications": "No notifications yet",
+    "newLetter": "New letter from {{petName}}",
+    "welcome": "Welcome to ToThereOn World!"
+  },
+  "pricing": {
+    "title": "Choose Your Plan",
+    "free": "Free",
+    "basic": "Basic",
+    "standard": "Standard",
+    "premium": "Premium",
+    "signupRequired": "Please sign up to access this feature"
+  }
+}

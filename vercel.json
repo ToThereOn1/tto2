@@ -1,0 +1,24 @@
+{
+    "crons": [
+        {
+            "path": "/api/cron/update-letter-status",
+            "schedule": "0 0 * * *"
+        },
+        {
+            "path": "/api/cron/daily-tothereon-check",
+            "schedule": "0 1 * * *"
+        },
+        {
+            "path": "/api/cron/reset-monthly-quotas",
+            "schedule": "0 0 1 * *"
+        },
+        {
+            "path": "/api/cron/daily-whisper",
+            "schedule": "0 7 * * *"
+        },
+        {
+            "path": "/api/cron/process-comment-replies",
+            "schedule": "0 */6 * * *"
+        }
+    ]
+}

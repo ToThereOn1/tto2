@@ -1,0 +1,5 @@
+<svg width="220" height="60" viewBox="0 0 220 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="15" y="18" width="28" height="28" rx="10" transform="rotate(25 29 32)" stroke="#8A9CA1" stroke-width="2.5" fill="none"/>
+  <rect x="28" y="12" width="28" height="28" rx="10" transform="rotate(25 42 26)" stroke="#87C8CB" stroke-width="2.5" fill="#87C8CB" fill-opacity="0.3"/>
+  <text x="75" y="40" font-family="Inter, -apple-system, sans-serif" font-size="24" font-weight="500" fill="#FFFFFF" letter-spacing="-0.5">ToThereOn</text>
+</svg>
