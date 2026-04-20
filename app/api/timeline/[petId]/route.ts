@@ -70,12 +70,21 @@ export async function GET(
             .select('*')
             .eq('pet_id', petId)
             .neq('event_type', 'daily_whisper')
-            .order('tothereon_day', { ascending: false });
+            .order('tothereon_day', { ascending: false })
+            .limit(50);
 
         if (statusError) {
             console.error('[timeline] pet_status_events fetch error:', statusError.message);
         }
         const safeStatusEvents = statusEvents || [];
+
+        // 2b. Fetch Micro-Events
+        const { data: microEvents } = await adminClient
+            .from('pet_micro_events')
+            .select('*')
+            .eq('pet_id', petId)
+            .order('created_at', { ascending: false })
+            .limit(50);
 
         // 3. Fetch Letters (Mailbox Feed)
         // User letters (sent by user)
@@ -216,13 +225,14 @@ export async function GET(
             },
             timeline: timelineStats,
             events: events,
+            microEvents: microEvents || [],
             success: true
         });
 
-    } catch (error: any) {
-        console.error('[Timeline API Error]', error);
+    } catch (error) {
+        console.error('[timeline]', error);
         return NextResponse.json(
-            { error: 'Failed to fetch timeline', detail: error.message },
+            { error: 'Failed to fetch timeline' },
             { status: 500 }
         );
     }

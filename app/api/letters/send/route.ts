@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { calculateToThereOnTime } from '@/lib/time-engine-v2'
 import { generateLetterReply } from '@/lib/reply-generator'
 import { smartUpdateVisualDNA } from '@/lib/visual-dna'
+import { createLetterEchoEvent } from '@/lib/letter-echo'
 
 export async function POST(request: Request) {
     try {
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
         // 3. Pet Ownership Check
         const { data: pet, error: petError } = await supabase
             .from('pets')
-            .select('id, passed_date, created_at')
+            .select('id, name, species, breed, passed_date, created_at')
             .eq('id', petId)
             .eq('user_id', user.id)
             .single()
@@ -73,6 +74,14 @@ export async function POST(request: Request) {
                 console.error('[Admin] Reply generation failed', e)
             }
 
+            createLetterEchoEvent({
+                petId,
+                petName: pet.name,
+                species: pet.species,
+                breed: pet.breed,
+                currentDay: timeInfo.currentDay,
+            }).catch(e => console.error('[letter-echo]', e));
+
             return NextResponse.json({ success: true, letter_id: adminLetter.id, remaining: 999 })
         }
 
@@ -87,7 +96,8 @@ export async function POST(request: Request) {
 
         if (rpcError) {
             console.error('RPC Transaction Error:', rpcError);
-            return NextResponse.json({ error: 'Transaction failed: ' + rpcError.message }, { status: 500 });
+            console.error('[send-letter] RPC transaction failed:', rpcError.message);
+            return NextResponse.json({ error: 'Failed to send letter. Please try again.' }, { status: 500 });
         }
 
         // Result handling
@@ -160,6 +170,14 @@ export async function POST(request: Request) {
                 remaining: result.remaining + 1 // Reflect the refund in UI
             }, { status: 500 });
         }
+
+        createLetterEchoEvent({
+            petId,
+            petName: pet.name,
+            species: pet.species,
+            breed: pet.breed,
+            currentDay: timeInfo.currentDay,
+        }).catch(e => console.error('[letter-echo]', e));
 
         // Visual DNA Smart Update (Fire-and-forget)
         if (photos && photos.length > 0) {

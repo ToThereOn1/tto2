@@ -12,6 +12,7 @@ import { DiscoveryState } from './DiscoveryState'
 import { CommentThread } from './CommentThread'
 import { ZoneMilestoneCard } from './ZoneMilestoneCard'
 import { FeedTextWithTooltips } from './NpcTooltip'
+import { MicroEventCard } from './MicroEventCard'
 
 // Mood styling
 const MOOD_COLORS: Record<string, string> = {
@@ -59,13 +60,26 @@ const ZONE_START_DAYS: Record<string, number> = {
     all_zones: 100,
 }
 
+interface MicroEvent {
+  id: string
+  content: string
+  category: string
+  time_of_day: string
+  npc_involved: string | null
+  zone: string
+  created_at: string
+  tothereon_day: number
+  language: string
+}
+
 type FeedItem =
     | { kind: 'event'; event: TimelineData['events'][0]; isFirstNpcEncounter: boolean }
+    | { kind: 'micro'; micro: MicroEvent }
     | { kind: 'milestone'; zone: string; day: number }
     | { kind: 'time-gap'; daysBetween: number; language: string }
 
-function buildFeedItems(events: TimelineData['events']): FeedItem[] {
-    if (events.length === 0) return []
+function buildFeedItems(events: TimelineData['events'], microEvents: MicroEvent[] = []): FeedItem[] {
+    if (events.length === 0 && microEvents.length === 0) return []
     const items: FeedItem[] = []
     const inserted = new Set<string>()
 
@@ -80,28 +94,50 @@ function buildFeedItems(events: TimelineData['events']): FeedItem[] {
         }
     }
 
-    for (let i = 0; i < events.length; i++) {
+    // Merge LLM events and micro-events by created_at descending
+    type MergedEntry =
+        | { kind: 'event'; event: TimelineData['events'][0]; ts: number }
+        | { kind: 'micro'; micro: MicroEvent; ts: number }
+
+    const merged: MergedEntry[] = [
+        ...events.map(e => ({ kind: 'event' as const, event: e, ts: new Date(e.createdAt).getTime() })),
+        ...microEvents.map(m => ({ kind: 'micro' as const, micro: m, ts: new Date(m.created_at).getTime() })),
+    ].sort((a, b) => b.ts - a.ts)
+
+    for (let i = 0; i < merged.length; i++) {
+        const entry = merged[i]
+
+        if (entry.kind === 'micro') {
+            items.push({ kind: 'micro', micro: entry.micro })
+            continue
+        }
+
+        const ev = entry.event
         items.push({
             kind: 'event',
-            event: events[i],
-            isFirstNpcEncounter: firstEncounterEventIds.has(events[i].id),
+            event: ev,
+            isFirstNpcEncounter: firstEncounterEventIds.has(ev.id),
         })
 
-        if (i < events.length - 1) {
-            const newerZone = getCanonicalZoneKey(events[i].toThereOnDay)
-            const olderZone = getCanonicalZoneKey(events[i + 1].toThereOnDay)
+        // Look ahead to the next LLM event for milestone/time-gap markers
+        const nextEventEntry = merged.slice(i + 1).find(e => e.kind === 'event') as
+            | { kind: 'event'; event: TimelineData['events'][0]; ts: number }
+            | undefined
+
+        if (nextEventEntry) {
+            const newerZone = getCanonicalZoneKey(ev.toThereOnDay)
+            const olderZone = getCanonicalZoneKey(nextEventEntry.event.toThereOnDay)
             if (newerZone !== olderZone && !inserted.has(newerZone) && ZONE_START_DAYS[newerZone]) {
                 items.push({ kind: 'milestone', zone: newerZone, day: ZONE_START_DAYS[newerZone] })
                 inserted.add(newerZone)
             }
 
-            // Time-gap marker: 2+ days between consecutive events
-            const dayGap = events[i].toThereOnDay - events[i + 1].toThereOnDay
+            const dayGap = ev.toThereOnDay - nextEventEntry.event.toThereOnDay
             if (dayGap >= 2) {
                 items.push({
                     kind: 'time-gap',
                     daysBetween: dayGap,
-                    language: events[i].language || 'English',
+                    language: ev.language || 'English',
                 })
             }
         }
@@ -184,13 +220,13 @@ interface TimelineData {
 
 interface PetStatusFeedProps {
     petId: string
-    initialData?: TimelineData
+    initialData?: TimelineData & { microEvents?: MicroEvent[] }
     canWriteLetter?: boolean
 }
 
 export function PetStatusFeed({ petId, initialData, canWriteLetter: serverCanWriteLetter = false }: PetStatusFeedProps) {
     const router = useRouter()
-    const [data, setData] = useState<TimelineData | null>(initialData || null)
+    const [data, setData] = useState<(TimelineData & { microEvents?: MicroEvent[] }) | null>(initialData || null)
     const [loading, setLoading] = useState(!initialData)
     const [simulating, setSimulating] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -514,37 +550,56 @@ export function PetStatusFeed({ petId, initialData, canWriteLetter: serverCanWri
 
                 {/* Feed Posts */}
                 <div className="space-y-8">
-                    {events.length > 0 ? (
-                        buildFeedItems(events).map((item, index) =>
-                            item.kind === 'milestone' ? (
-                                <ZoneMilestoneCard
-                                    key={`milestone-${item.zone}`}
-                                    zone={item.zone}
-                                    day={item.day}
-                                />
-                            ) : item.kind === 'time-gap' ? (
-                                <div key={`gap-${index}`} className="flex items-center gap-3 py-2 px-4">
-                                    <div className="flex-1 h-px bg-slate-200" />
-                                    <span className="text-[11px] text-slate-400 whitespace-nowrap">
-                                        {item.language === 'Korean'
-                                            ? `${item.daysBetween}일이 조용히 흘렀어요`
-                                            : `${item.daysBetween} quiet days passed`}
-                                    </span>
-                                    <div className="flex-1 h-px bg-slate-200" />
-                                </div>
-                            ) : (
-                                <EventCard
-                                    key={item.event.id}
-                                    event={item.event}
-                                    petName={pet.name}
-                                    petPhoto={pet.photos?.[0]}
-                                    petId={pet.id}
-                                    petPassedDate={pet.passed_date}
-                                    isFirstNpcEncounter={item.isFirstNpcEncounter}
-                                    style={{ animationDelay: `${index * 100}ms` }}
-                                />
-                            )
-                        )
+                    {events.length > 0 || (data?.microEvents?.length ?? 0) > 0 ? (
+                        (() => {
+                            const feedItems = buildFeedItems(events, data?.microEvents ?? [])
+                            return feedItems.map((item, index) => {
+                                const prevIsMicro = index > 0 && feedItems[index - 1].kind === 'micro'
+                                if (item.kind === 'milestone') return (
+                                    <ZoneMilestoneCard
+                                        key={`milestone-${item.zone}`}
+                                        zone={item.zone}
+                                        day={item.day}
+                                    />
+                                )
+                                if (item.kind === 'time-gap') return (
+                                    <div key={`gap-${index}`} className="flex items-center gap-3 py-2 px-4">
+                                        <div className="flex-1 h-px bg-slate-200" />
+                                        <span className="text-[11px] text-slate-400 whitespace-nowrap">
+                                            {item.language === 'Korean'
+                                                ? `${item.daysBetween}일이 조용히 흘렀어요`
+                                                : `${item.daysBetween} quiet days passed`}
+                                        </span>
+                                        <div className="flex-1 h-px bg-slate-200" />
+                                    </div>
+                                )
+                                if (item.kind === 'micro') return (
+                                    <div key={item.micro.id} className={prevIsMicro ? 'mt-1' : ''}>
+                                        <MicroEventCard
+                                            content={item.micro.content}
+                                            category={item.micro.category}
+                                            timeOfDay={item.micro.time_of_day}
+                                            npcInvolved={item.micro.npc_involved}
+                                            createdAt={item.micro.created_at}
+                                            zone={item.micro.zone}
+                                            language={item.micro.language}
+                                        />
+                                    </div>
+                                )
+                                return (
+                                    <EventCard
+                                        key={item.event.id}
+                                        event={item.event}
+                                        petName={pet.name}
+                                        petPhoto={pet.photos?.[0]}
+                                        petId={pet.id}
+                                        petPassedDate={pet.passed_date}
+                                        isFirstNpcEncounter={item.isFirstNpcEncounter}
+                                        style={{ animationDelay: `${index * 100}ms` }}
+                                    />
+                                )
+                            })
+                        })()
                     ) : (
                         <div className="glass p-10 rounded-[40px] shadow-xl border-white animate-in zoom-in-95 duration-1000">
                             {remembranceCompleted && data?.timeline?.currentDay != null ? (

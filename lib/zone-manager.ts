@@ -140,7 +140,7 @@ export function selectLocation(
  * Get the time of day based on current hour
  */
 export function getTimeOfDay(): 'morning' | 'afternoon' | 'evening' | 'night' {
-    const hour = new Date().getHours();
+    const hour = new Date().getUTCHours();
     if (hour >= 6 && hour < 12) return 'morning';
     if (hour >= 12 && hour < 17) return 'afternoon';
     if (hour >= 17 && hour < 21) return 'evening';
