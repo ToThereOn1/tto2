@@ -16,6 +16,10 @@ interface FeedEvent {
     event_description?: string;
     content?: string;
     event_type?: string;
+    type?: string;
+    subtype?: string;
+    sender_type?: 'user' | 'pet';
+    is_read?: boolean;
     zone?: string;
     mood?: string;
     npc_involved?: string;
@@ -128,11 +132,10 @@ export function WorldDashboard({ petId, canWriteLetter }: WorldDashboardProps) {
     const { pet, timeline, events, microEvents } = data;
     const petPhotoUrl = pet.photos?.[0] ?? null;
 
-    const rawData = data as unknown as Record<string, unknown>;
-    const userLetters = (rawData.userLetters ?? rawData.sentLetters ?? []) as Array<{ created_at: string }>;
-    const petLetters = (rawData.petLetters ?? rawData.deliverablePetLetters ?? []) as Array<{ status: string }>;
-    const lastSentAt = userLetters[0]?.created_at ?? null;
-    const hasUnreadReply = petLetters.some((l) => l.status === 'sent' || l.status === 'approved');
+    const userLetterEvents = events.filter((e) => e.sender_type === 'user' && e.type === 'letter');
+    const petLetterEvents = events.filter((e) => e.sender_type === 'pet' && e.type === 'letter');
+    const lastSentAt = userLetterEvents[0]?.created_at ?? null;
+    const hasUnreadReply = petLetterEvents.some((e) => e.is_read === false);
 
     return (
         <div className="min-h-screen bg-slate-50">
