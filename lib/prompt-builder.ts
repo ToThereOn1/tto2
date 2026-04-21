@@ -26,6 +26,8 @@ interface RecentEventSummary {
     unresolvedThread?: string;
     // Causal Thread Decay v2
     threadImportance?: 'high' | 'medium' | 'low';
+    // Post type variety system
+    postType?: string;
 }
 
 interface PromptContext {
@@ -859,11 +861,33 @@ Output ONLY the letter text. No title. No explanation. 80–130 words.`;
         ? recentEvents.map((e, idx) => {
             const loc = e.locationName ? ` at ${e.locationName}` : '';
             const npcNote = e.npcName ? ` (with ${e.npcName})` : '';
+            const postTypeNote = e.postType ? ` [${e.postType}]` : '';
             // Most recent event: prefer narrative summary over first sentence
             const summary = (idx === 0 && e.narrativeSummary) ? e.narrativeSummary : e.firstSentence;
-            return `  • Day ${e.day} [${e.eventType}]${loc}${npcNote}: "${summary}"`;
+            return `  • Day ${e.day} [${e.eventType}]${postTypeNote}${loc}${npcNote}: "${summary}"`;
         }).join('\n')
         : '  • (no prior events recorded yet)';
+
+    // Recent post types for variety tracking
+    const recentPostTypesLine = (recentEvents && recentEvents.length > 0)
+        ? `Recent post types: ${recentEvents.map(e => e.postType ?? 'daily_moment').join(', ')}`
+        : '';
+
+    // Build structured ACTIVE THREADS section from recent unresolved threads
+    const activeThreadsSection = (() => {
+        if (!recentEvents || recentEvents.length === 0) return '';
+        const threads = recentEvents
+            .filter(e => e.unresolvedThread && e.threadImportance !== 'low')
+            .map((e, idx) => {
+                const importance = e.threadImportance ?? 'medium';
+                return `Thread ${idx + 1} (${importance}): "${e.unresolvedThread}" (Day ${e.day})`;
+            });
+        if (threads.length === 0) return '';
+        const mustMention = threads.length >= 2
+            ? `\nYou MUST mention at least Thread 1 or Thread 2 today. Other threads can wait.`
+            : `\nYou MUST mention Thread 1 today.`;
+        return `\n━━━ YOUR ACTIVE THREADS ━━━\n${threads.join('\n')}${mustMention}\n`;
+    })();
 
     // Build letter causality section
     const letterCausalitySection = buildLetterCausalitySection(
@@ -1011,9 +1035,9 @@ ${personaSpark ? `\nToday specifically: ${personaSpark}` : ''}
 This is Day ${currentDay}. The story does not start over — it continues.
 Connect to at least ONE of the following anchors:
 ${narrativeAnchors}
-${companionLine ? `${companionLine}\n` : ''}Do NOT write as if today is the first day.
+${recentPostTypesLine ? `${recentPostTypesLine}\n` : ''}${companionLine ? `${companionLine}\n` : ''}Do NOT write as if today is the first day.
 Your world already has weight. Honor that.
-${recentEvents && recentEvents[0] ? `
+${activeThreadsSection}${recentEvents && recentEvents[0] ? `
 ⛔ OPENING BAN: Your last entry started with: "${recentEvents[0].firstSentence.slice(0, 60)}..."
 Do NOT start with the same words, the same location arrival framing, or the same first image.
 Your opening MUST reference yesterday's thread OR a known NPC/location from your recent history. Cold starts are rejected.

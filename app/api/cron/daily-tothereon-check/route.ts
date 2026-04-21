@@ -296,6 +296,8 @@ export async function GET(request: Request) {
                     unresolvedThread: (e.unresolved_thread as string | null) || undefined,
                     // Thread Decay v2
                     threadImportance: (e.thread_importance as string | null) as 'high' | 'medium' | 'low' | undefined,
+                    // Post type variety system
+                    postType: (e.metadata as any)?.post_type || undefined,
                 }));
 
                 // Causal Chain Engine: yesterday's mood for emotional carryover

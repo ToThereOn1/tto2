@@ -44,6 +44,8 @@ export interface RecentEvent {
     unresolvedThread?: string;    // the hook/open question from this event
     // Causal Thread Decay v2
     threadImportance?: 'high' | 'medium' | 'low';
+    // Post type variety system
+    postType?: string;            // from metadata.post_type
 }
 
 export interface StatusEventContext {
@@ -114,6 +116,7 @@ export interface EventResult {
         location_name?: string;
         npc_name?: string;
         time_of_day?: string;
+        post_type?: string;
         validation_passed?: boolean;
         attempts?: number;
     };
@@ -160,6 +163,148 @@ const FORBIDDEN_WORDS_JP = [
     '感じた', '気持ち',
     '虹の橋',
 ];
+
+// ─── Voice Profiles ──────────────────────────────────────────────────────
+
+const VOICE_PROFILES: Record<string, {
+    rhythm: string;
+    perspective: string;
+    signature: string;
+}> = {
+    dog_bold: {
+        rhythm: 'Energetic bursts. Short declarative sentences. Exclamation through action, not punctuation. Runs before thinking. The body leads.',
+        perspective: 'Everything is worth investigating. Everything is worth running toward. Hesitation is for later.',
+        signature: 'Impulsive commitment — "Was in the water before I decided to be."',
+    },
+    dog_shy: {
+        rhythm: 'Hesitant. Sentences start and sometimes stop. Dashes and fragments. Courage shows up in small, specific moments.',
+        perspective: 'Watches first. Approaches from the side, never the front. The brave moments are tiny but they matter.',
+        signature: 'The almost-action — "Nearly went. Stood at the edge for a while. Tomorrow, maybe."',
+    },
+    dog_playful: {
+        rhythm: 'Quick, bouncy. Jumps between topics. Gets distracted mid-sentence. The joy is in the chaos.',
+        perspective: 'Everything is a game or could be a game. The stick is not just a stick. The puddle is not just a puddle.',
+        signature: 'The digression — "Went to the lake but then there was a THING and I forgot about the lake."',
+    },
+    cat_curious: {
+        rhythm: 'Measured. Each sentence is deliberate. Long pauses between thoughts, shown as short paragraphs. Nothing is rushed.',
+        perspective: 'Studies everything from a distance first. Approaches with caution that looks like indifference. Knows more than it shows.',
+        signature: 'The delayed verdict — "Watched it for three days. On the fourth, I touched it. Acceptable."',
+    },
+    cat_shy: {
+        rhythm: 'Sparse. Sentences are short, almost reluctant. Like the words themselves are being rationed.',
+        perspective: 'The world is large and the safe spots are known. Venturing out is an event. Returning is relief.',
+        signature: 'The retreat — "Went. Came back. The spot was still there. Good."',
+    },
+    cat_bold: {
+        rhythm: 'Declarative and assured. Owns every space it enters. Sentences are clean and final.',
+        perspective: 'This is my territory. I allow others in it. The arrangement suits me.',
+        signature: 'The claim — "Sat in the center of it. Stayed. Nobody objected."',
+    },
+    default: {
+        rhythm: 'Balanced. Mix of short and long. Comfortable with silence. Neither rushed nor slow.',
+        perspective: 'Curious about the world but not urgent about it. Things happen at their own pace.',
+        signature: 'The observation — "It was there yesterday too. Might be there tomorrow."',
+    },
+};
+
+function getVoiceProfile(species: string, personalityBucket: string): typeof VOICE_PROFILES[string] {
+    const key = `${species}_${personalityBucket}`;
+    return VOICE_PROFILES[key] ?? VOICE_PROFILES[`${species}_balanced`] ?? VOICE_PROFILES.default;
+}
+
+/**
+ * Derive a personality bucket from dimensional scores.
+ * Maps the pet's scores to one of: bold, shy, playful, curious, balanced.
+ */
+function derivePersonalityBucket(scores?: DimensionalScores): string {
+    if (!scores) return 'balanced';
+    const { social_energy, playfulness_intensity, curiosity_drive, emotional_resilience } = scores;
+
+    // High playfulness dominates for dogs
+    if (playfulness_intensity >= 70) return 'playful';
+    // Low social + low resilience = shy
+    if (social_energy < 40 && emotional_resilience < 50) return 'shy';
+    // High social or high resilience = bold
+    if (social_energy >= 70 || emotional_resilience >= 70) return 'bold';
+    // High curiosity for cats
+    if (curiosity_drive >= 65) return 'curious';
+    return 'balanced';
+}
+
+// ─── Post Type Variety System ────────────────────────────────────────────
+
+export interface PostType {
+    id: string;
+    weight: number;
+    instruction: string;
+    requiresLetter?: boolean;
+}
+
+const POST_TYPES: PostType[] = [
+    {
+        id: 'daily_moment',
+        weight: 25,
+        instruction: `Write about ONE specific moment from today. Not the whole day — one scene, one minute. You were there, something happened, and it stayed with you.`,
+    },
+    {
+        id: 'ongoing_thread',
+        weight: 20,
+        instruction: `Continue something from a previous entry. Reference it explicitly: "That [thing] from [when]" — then say what changed, what you found, or what you're still figuring out. This is NOT a new standalone story. It is a continuation.`,
+    },
+    {
+        id: 'thought',
+        weight: 15,
+        instruction: `Share a thought or observation. Not an event — a thought. Something you noticed, a pattern you see, a question you have about this world. You're not reporting what happened. You're thinking out loud. Can be 2-3 sentences total.`,
+    },
+    {
+        id: 'routine_update',
+        weight: 10,
+        instruction: `Describe your routine. What you do every day — your spots, your path, your habits. The beauty is in the sameness. "Same rock. Same time. The moss is different though." This post should make the reader feel they know your daily life.`,
+    },
+    {
+        id: 'npc_conversation',
+        weight: 10,
+        instruction: `Someone said something to you or you overheard something. The focus is on the exchange — what was said, the pause before responding, the thing left unsaid. Include at least one line of actual speech (quoted).`,
+    },
+    {
+        id: 'discovery',
+        weight: 10,
+        instruction: `You found something new — a place, an object, a path, a sound. Describe the finding in sensory detail. This should feel like the START of something, not a complete story. Leave it open.`,
+    },
+    {
+        id: 'letter_reflection',
+        weight: 5,
+        instruction: `Something about the letter you received is still with you. Don't summarize the letter. Pick ONE detail from it — a word, a phrase, a feeling it carried — and show how it appeared in your day unexpectedly. A scent that matched. A spot that looked like somewhere from before.`,
+        requiresLetter: true,
+    },
+    {
+        id: 'quiet_day',
+        weight: 5,
+        instruction: `Almost nothing happened. And that's the post. 1-3 short sentences. "Went to my spot. Sun moved across the ground. Came back." The reader should feel the peace, not the emptiness. This post can be under 40 words.`,
+    },
+];
+
+export function selectPostType(recentPostTypes: string[], hasRecentLetter: boolean): PostType {
+    // Filter out letter_reflection if no recent letter
+    let pool = hasRecentLetter ? POST_TYPES : POST_TYPES.filter(p => !p.requiresLetter);
+
+    // Deprioritize types used in last 3 posts
+    const recentSet = new Set(recentPostTypes.slice(0, 3));
+    pool = pool.map(p => ({
+        ...p,
+        weight: recentSet.has(p.id) ? Math.floor(p.weight / 3) : p.weight,
+    }));
+
+    // Weighted random selection
+    const totalWeight = pool.reduce((sum, p) => sum + p.weight, 0);
+    let random = Math.random() * totalWeight;
+    for (const p of pool) {
+        random -= p.weight;
+        if (random <= 0) return p;
+    }
+    return pool[0];
+}
 
 // ─── System Prompt ───────────────────────────────────────────────────────
 
@@ -261,16 +406,23 @@ Not explained. Not labeled. Just: you doing the thing you've always done, becaus
 This is the moment the guardian reads and feels: "They remember me. They're okay."
 It does NOT have to be sentimental. It can be small. A corner you always check. A certain way you sit. A food preference.
 
-━━━ END WITH A HOOK ━━━
-End with ONE unresolved thing that names a SPECIFIC object, place, or creature — not a vague feeling.
-This is not sadness. It is curiosity. Something is still happening.
-The guardian should finish reading and feel a pull — to come back tomorrow, to send a letter, to know what happens next.
+━━━ CONTINUITY (THE MOST IMPORTANT RULE) ━━━
+You have a LIFE. Not a series of disconnected moments. Your entries must feel like chapters of the same ongoing story.
 
-HOOK SPECIFICITY TEST: If you could swap your hook into another pet's entry and it still works, it is too vague. Rewrite.
-  ✗ "I'll go back tomorrow." → works for any pet. Too vague.
-  ✓ "That gap in the lower hedge — something was on the other side. I heard it breathe." → only this pet, this place, this moment.
-  ✗ "Still don't know what that was." → generic.
-  ✓ "The stone Digby left near my spot. It wasn't there yesterday." → specific object, named character, concrete detail.
+MANDATORY CONNECTIONS:
+1. Reference previous entries at least every other post. "That thing from yesterday" / "Still working on the hedge situation" / "Went back to where Digby left the stone"
+2. You have 2-3 ONGOING THINGS at any time. Investigations, projects, routines, relationships. Name them. Update them.
+3. When an NPC appears, remember your history with them. "Pip — again. Third time this week. I think we have an arrangement now."
+4. Your ROUTINE should emerge over time. The reader should know: where you go in the morning, your favorite spot, who you see regularly.
+
+THREAD MANAGEMENT:
+- ACTIVE THREADS (from previous entries) are listed below. You MUST reference at least one.
+- When you start something new, it becomes a thread. When you resolve something, close it explicitly.
+- Not every thread needs to advance every day. "Still haven't gone back to the hedge. Not today." counts.
+
+━━━ END WITH A HOOK ━━━
+End with ONE unresolved thing — but it can be a continuation of an existing thread OR a new discovery.
+The hook must name a SPECIFIC object, place, or creature.
 
 OUTPUT: Only the journal entry text. No title. No "Dear diary." No headers. No sign-off.
 
@@ -284,7 +436,12 @@ THREAD_IMPORTANCE guide: high = unresolved mystery, NPC promise, or discovery th
  * Builds the system prompt for event generation, injecting language-specific
  * style instructions and forbidden words.
  */
-function buildSystemPrompt(language: string, personaProfile?: PersonaProfile): string {
+function buildSystemPrompt(
+    language: string,
+    personaProfile?: PersonaProfile,
+    species?: string,
+    dimensionalScores?: DimensionalScores,
+): string {
     const langInstruction = getLanguageInstruction(language);
 
     const languageSection = [
@@ -311,15 +468,24 @@ function buildSystemPrompt(language: string, personaProfile?: PersonaProfile): s
         vocabularyPref ? `Word choices: ${vocabularyPref}` : '',
     ].filter(Boolean).join('\n');
 
-    const voiceSection = voiceLines ? `
-
-━━━ YOUR VOICE ━━━
+    const personaVoiceSection = voiceLines ? `
 This is how you specifically write — not a generic animal narrator, but exactly you:
 ${voiceLines}
 
 Stay in this voice for every sentence. Do not drift into literary animal narration.` : '';
 
-    return `${SYSTEM_PROMPT_BASE}\n\n${languageSection}${voiceSection}`;
+    // Species + personality-based voice profile
+    const personalityBucket = derivePersonalityBucket(dimensionalScores);
+    const voiceProfile = getVoiceProfile(species ?? 'dog', personalityBucket);
+    const speciesVoiceSection = `
+━━━ YOUR VOICE ━━━
+Rhythm: ${voiceProfile.rhythm}
+Perspective: ${voiceProfile.perspective}
+Your signature move: ${voiceProfile.signature}
+Write EVERY entry in this voice. If it sounds like it could come from any animal, rewrite it in YOUR voice.
+${personaVoiceSection}`;
+
+    return `${SYSTEM_PROMPT_BASE}\n\n${languageSection}${speciesVoiceSection}`;
 }
 
 // ─── Intelligence Score Calculation ──────────────────────────────────────
@@ -670,6 +836,12 @@ export async function generateStatusEvent(context: StatusEventContext): Promise<
         )
         : undefined;
 
+    // Post type variety: select a post type based on recent history
+    const recentPostTypes = (context.recentEvents || [])
+        .map(e => (e as any).postType ?? 'daily_moment');
+    const hasRecentLetter = !!(context.recentLetter || context.letterPhase === 'just_received' || context.letterPhase === 'still_carrying');
+    const selectedPostType = selectPostType(recentPostTypes, hasRecentLetter);
+
     // Build the user prompt
     const userPrompt = buildStatusFeedPrompt({
         petName: context.petName,
@@ -715,6 +887,10 @@ export async function generateStatusEvent(context: StatusEventContext): Promise<
         letterImprint: context.letterImprint,
     });
 
+    // Inject post type instruction into user prompt
+    const postTypeInstruction = `\n\n━━━ POST TYPE: ${selectedPostType.id.toUpperCase().replace(/_/g, ' ')} ━━━\n${selectedPostType.instruction}\nWrite this entry as the above post type. The type shapes the structure — but your voice stays yours.`;
+    const fullUserPrompt = userPrompt + postTypeInstruction;
+
     let generatedText = '';
     let attempts = 0;
     let validationResult = { passed: false, issues: [] as string[], warnings: [] as string[] };
@@ -731,19 +907,19 @@ export async function generateStatusEvent(context: StatusEventContext): Promise<
         attempts++;
 
         // On retry: inject previous failure feedback so the model self-corrects
-        let effectiveUserPrompt = userPrompt;
+        let effectiveUserPrompt = fullUserPrompt;
         if (attempts > 1 && validationResult.issues.length > 0) {
             const feedbackNote = validationResult.issues.some(i => i.includes('Too long') || i.includes('Too many words'))
                 ? `\n\n⚠️ PREVIOUS ATTEMPT REJECTED: Output was too long. Write SHORTER. Max 130 words. Cut every sentence that explains instead of shows. Aim for 80-100 words.`
                 : `\n\n⚠️ PREVIOUS ATTEMPT REJECTED: Issues: ${validationResult.issues.join('; ')}. Fix these.`;
-            effectiveUserPrompt = userPrompt + feedbackNote;
+            effectiveUserPrompt = fullUserPrompt + feedbackNote;
         }
 
         try {
             const response = await getAnthropic().messages.create({
                 model: AI_CONFIG.EVENT_MODEL,
                 max_tokens: 450,
-                system: buildSystemPrompt(context.userLanguage, context.personaProfile),
+                system: buildSystemPrompt(context.userLanguage, context.personaProfile, context.species, context.dimensionalScores),
                 messages: [{ role: 'user', content: effectiveUserPrompt }],
             });
 
@@ -783,6 +959,7 @@ export async function generateStatusEvent(context: StatusEventContext): Promise<
             location_name: location.name,
             npc_name: npc?.name || undefined,
             time_of_day: timeOfDay,
+            post_type: selectedPostType.id,
             validation_passed: validationResult.passed,
             attempts,
         },
