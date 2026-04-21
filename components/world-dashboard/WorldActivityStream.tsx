@@ -1,23 +1,21 @@
 'use client';
 
 import { useMemo } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
-import { STAGGER_CONTAINER, STAGGER_ITEM, REDUCED_MOTION_FALLBACK } from '@/lib/motion-presets';
-import type { TimeOfDay } from '@/lib/world-dashboard-constants';
-import { TimeSectionHeader } from './TimeSectionHeader';
-import { MicroEventCard } from '@/components/feed/MicroEventCard';
+import { Mail, Sparkles, Wind, PawPrint, Eye, Clock } from 'lucide-react';
+import { getNpcDisplayName } from '@/lib/npc-constants';
+import { getZoneDisplayName } from '@/lib/zone-manager';
+import type { SupportedLanguage } from '@/lib/micro-event-types';
 
 interface FeedEvent {
     id: string;
-    event_description?: string;
     content?: string;
-    event_type?: string;
+    event_description?: string;
+    type?: string;
     zone?: string;
     mood?: string;
     npc_involved?: string;
     created_at: string;
-    tothereon_day: number;
 }
 
 interface MicroEvent {
@@ -35,165 +33,199 @@ interface MicroEvent {
 interface WorldActivityStreamProps {
     events: FeedEvent[];
     microEvents: MicroEvent[];
-    currentTimeOfDay: TimeOfDay;
+    currentTimeOfDay: string;
     petName: string;
+    petPhotoUrl?: string | null;
     language?: string;
 }
 
-type UnifiedItem = {
+type UnifiedPost = {
     id: string;
     content: string;
-    type: 'event' | 'micro';
-    timeOfDay: TimeOfDay;
+    sourceType: 'llm' | 'micro';
+    category?: string;
     createdAt: string;
     zone: string;
     mood: string | null;
     npcInvolved: string | null;
-    category?: string;
-    language?: string;
+    language: string;
 };
 
-const TIME_OF_DAY_ORDER: TimeOfDay[] = ['morning', 'afternoon', 'evening', 'night'];
+const CATEGORY_ICONS: Record<string, React.ElementType> = {
+    atmosphere: Wind,
+    pet_action: PawPrint,
+    npc_sighting: Eye,
+    letter_echo: Mail,
+    world_ambient: Sparkles,
+    time_marker: Clock,
+};
 
-function getTimeOfDayFromUtcHour(dateStr: string): TimeOfDay {
-    const hour = new Date(dateStr).getHours();
-    if (hour >= 6 && hour < 12) return 'morning';
-    if (hour >= 12 && hour < 17) return 'afternoon';
-    if (hour >= 17 && hour < 21) return 'evening';
-    return 'night';
+const AMBIENT_CATEGORIES = new Set(['atmosphere', 'world_ambient']);
+
+function safeTimeAgo(dateStr: string): string {
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return '';
+        return formatDistanceToNow(d, { addSuffix: true });
+    } catch {
+        return '';
+    }
+}
+
+const MOOD_COLORS: Record<string, string> = {
+    peaceful: 'bg-sky-50 text-sky-600',
+    playful: 'bg-amber-50 text-amber-600',
+    curious: 'bg-emerald-50 text-emerald-600',
+    nostalgic: 'bg-violet-50 text-violet-600',
+    joyful: 'bg-rose-50 text-rose-600',
+    reflective: 'bg-slate-100 text-slate-500',
+};
+
+interface FeedPostProps {
+    post: UnifiedPost;
+    petName: string;
+    petPhotoUrl?: string | null;
+    language: string;
+}
+
+function FeedPost({ post, petName, petPhotoUrl, language }: FeedPostProps) {
+    const isAmbient = post.category ? AMBIENT_CATEGORIES.has(post.category) : false;
+    const isLlm = post.sourceType === 'llm';
+    const isLetterEcho = post.category === 'letter_echo';
+    const Icon = post.category ? (CATEGORY_ICONS[post.category] ?? null) : null;
+    const lang = (post.language || language || 'en') as SupportedLanguage;
+    const npcDisplay = post.npcInvolved ? getNpcDisplayName(post.npcInvolved, lang) : null;
+    const zoneDisplay = post.zone ? getZoneDisplayName(post.zone) : null;
+    const timeAgo = safeTimeAgo(post.createdAt);
+    const moodColor = post.mood ? (MOOD_COLORS[post.mood] ?? 'bg-slate-100 text-slate-500') : null;
+
+    return (
+        <div
+            className={`flex gap-3 px-4 py-4 border-b border-slate-100 transition-colors ${
+                isLetterEcho
+                    ? 'bg-cyan-50/40'
+                    : 'hover:bg-slate-50/60'
+            }`}
+        >
+            {/* Avatar */}
+            <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center text-base ring-1 ring-slate-200">
+                {petPhotoUrl ? (
+                    <img src={petPhotoUrl} alt={petName} className="w-full h-full object-cover" />
+                ) : (
+                    '🐾'
+                )}
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 min-w-0">
+                {/* Header row */}
+                <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                    <span className="font-semibold text-[14px] text-slate-900 leading-none">{petName}</span>
+                    {timeAgo && (
+                        <>
+                            <span className="text-slate-300 text-xs select-none">·</span>
+                            <span className="text-[12px] text-slate-400">{timeAgo}</span>
+                        </>
+                    )}
+                    {post.mood && isLlm && moodColor && (
+                        <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-medium capitalize ${moodColor}`}>
+                            {post.mood}
+                        </span>
+                    )}
+                </div>
+
+                {/* Content */}
+                <p
+                    className={`text-[14px] leading-[1.65] break-words ${
+                        isAmbient
+                            ? 'text-slate-400 italic'
+                            : isLlm
+                            ? 'text-slate-800'
+                            : 'text-slate-600'
+                    }`}
+                >
+                    {post.content}
+                </p>
+
+                {/* Footer metadata */}
+                {(npcDisplay || zoneDisplay) && (
+                    <p className="mt-1.5 text-[11px] text-slate-400 flex items-center gap-1.5 flex-wrap">
+                        {npcDisplay && <span>with {npcDisplay}</span>}
+                        {npcDisplay && zoneDisplay && <span className="select-none">·</span>}
+                        {zoneDisplay && <span>{zoneDisplay}</span>}
+                    </p>
+                )}
+            </div>
+
+            {/* Category icon (micro-events only) */}
+            {!isLlm && Icon && (
+                <Icon size={12} className="text-slate-300 shrink-0 mt-1.5" />
+            )}
+        </div>
+    );
 }
 
 export function WorldActivityStream({
     events,
     microEvents,
-    currentTimeOfDay,
-    petName: _petName,
+    currentTimeOfDay: _unused,
+    petName,
+    petPhotoUrl,
     language = 'en',
 }: WorldActivityStreamProps) {
-    const shouldReduceMotion = useReducedMotion();
-
-    const unified = useMemo<UnifiedItem[]>(() => {
-        const fromEvents: UnifiedItem[] = events.map((e) => ({
+    const posts = useMemo<UnifiedPost[]>(() => {
+        const fromEvents: UnifiedPost[] = events.map((e) => ({
             id: e.id,
-            content: e.event_description ?? e.content ?? '',
-            type: 'event',
-            timeOfDay: getTimeOfDayFromUtcHour(e.created_at),
-            createdAt: e.created_at,
-            zone: e.zone ?? '',
-            mood: e.mood ?? null,
-            npcInvolved: e.npc_involved ?? null,
+            content: e.event_description || e.content || '',
+            sourceType: 'llm',
+            createdAt: e.created_at || '',
+            zone: e.zone || '',
+            mood: e.mood || null,
+            npcInvolved: e.npc_involved || null,
+            language,
         }));
 
-        const fromMicro: UnifiedItem[] = microEvents.map((m) => ({
+        const fromMicro: UnifiedPost[] = microEvents.map((m) => ({
             id: m.id,
             content: m.content,
-            type: 'micro',
-            timeOfDay: (m.time_of_day as TimeOfDay) ?? getTimeOfDayFromUtcHour(m.created_at),
+            sourceType: 'micro',
+            category: m.category,
             createdAt: m.created_at,
             zone: m.zone,
             mood: null,
             npcInvolved: m.npc_involved,
-            category: m.category,
-            language: m.language,
+            language: m.language || language,
         }));
 
         return [...fromEvents, ...fromMicro]
+            .filter((p) => {
+                if (!p.createdAt) return false;
+                const d = new Date(p.createdAt);
+                return !isNaN(d.getTime());
+            })
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-            .slice(0, 25);
-    }, [events, microEvents]);
+            .slice(0, 40);
+    }, [events, microEvents, language]);
 
-    const grouped = useMemo(() => {
-        const map = new Map<TimeOfDay, UnifiedItem[]>();
-        for (const item of unified) {
-            const existing = map.get(item.timeOfDay) ?? [];
-            map.set(item.timeOfDay, [...existing, item]);
-        }
-        return map;
-    }, [unified]);
-
-    // Order groups: currentTimeOfDay first, then others in reverse chronological order
-    const orderedKeys = useMemo<TimeOfDay[]>(() => {
-        const present = Array.from(grouped.keys());
-        const currentIdx = TIME_OF_DAY_ORDER.indexOf(currentTimeOfDay);
-        // Reverse chrono order from currentTimeOfDay going backwards
-        const otherOrder: TimeOfDay[] = [];
-        for (let i = currentIdx - 1; i >= 0; i--) {
-            otherOrder.push(TIME_OF_DAY_ORDER[i]);
-        }
-        for (let i = TIME_OF_DAY_ORDER.length - 1; i > currentIdx; i--) {
-            otherOrder.push(TIME_OF_DAY_ORDER[i]);
-        }
-        const result: TimeOfDay[] = [];
-        if (present.includes(currentTimeOfDay)) result.push(currentTimeOfDay);
-        for (const key of otherOrder) {
-            if (present.includes(key)) result.push(key);
-        }
-        return result;
-    }, [grouped, currentTimeOfDay]);
-
-    const containerProps = shouldReduceMotion ? REDUCED_MOTION_FALLBACK : STAGGER_CONTAINER;
-    const itemProps = shouldReduceMotion ? {} : STAGGER_ITEM;
-
-    if (unified.length === 0) {
+    if (posts.length === 0) {
         return (
-            <div className="rounded-3xl p-8 bg-white/60 border border-white/40 text-center">
+            <div className="px-4 py-16 text-center">
                 <p className="text-sm text-slate-400 italic">The world is quiet right now.</p>
             </div>
         );
     }
 
     return (
-        <motion.div
-            className="flex flex-col gap-1"
-            {...containerProps}
-        >
-            {orderedKeys.map((tod) => {
-                const items = grouped.get(tod) ?? [];
-                return (
-                    <motion.div key={tod} {...itemProps}>
-                        <TimeSectionHeader
-                            timeOfDay={tod}
-                            isCurrent={tod === currentTimeOfDay}
-                            language={language}
-                        />
-                        <div className="flex flex-col gap-3">
-                            {items.map((item) => {
-                                if (item.type === 'micro') {
-                                    return (
-                                        <motion.div key={item.id} {...itemProps}>
-                                            <MicroEventCard
-                                                content={item.content}
-                                                category={item.category ?? 'world_ambient'}
-                                                timeOfDay={item.timeOfDay}
-                                                npcInvolved={item.npcInvolved}
-                                                createdAt={item.createdAt}
-                                                zone={item.zone}
-                                                language={item.language ?? language}
-                                            />
-                                        </motion.div>
-                                    );
-                                }
-
-                                return (
-                                    <motion.div key={item.id} {...itemProps}>
-                                        <div className="rounded-3xl p-5 bg-white/80 backdrop-blur-sm border border-white/60 shadow-sm">
-                                            {item.mood && (
-                                                <span className="inline-block px-2 py-0.5 rounded-full bg-slate-100 text-[10px] font-semibold text-slate-600 mb-2">
-                                                    {item.mood}
-                                                </span>
-                                            )}
-                                            <p className="text-sm text-slate-800 leading-relaxed">{item.content}</p>
-                                            <span className="text-[10px] text-slate-400 mt-2 block">
-                                                {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
-                                            </span>
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
-                        </div>
-                    </motion.div>
-                );
-            })}
-        </motion.div>
+        <div className="divide-y divide-slate-100">
+            {posts.map((post) => (
+                <FeedPost
+                    key={post.id}
+                    post={post}
+                    petName={petName}
+                    petPhotoUrl={petPhotoUrl}
+                    language={language}
+                />
+            ))}
+        </div>
     );
 }

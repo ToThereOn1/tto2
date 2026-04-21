@@ -2,13 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useWorldAtmosphere } from '@/hooks/useWorldAtmosphere';
-import { SEASON_CONFIG } from '@/lib/world-dashboard-constants';
 import { WorldHeader } from './WorldHeader';
-import { PetLocationHero } from './PetLocationHero';
-import { NpcPresenceRow } from './NpcPresenceRow';
 import { WorldActivityStream } from './WorldActivityStream';
 import { LetterStatusWidget } from './LetterStatusWidget';
-import { LetterEchoCard } from './LetterEchoCard';
 
 interface WorldDashboardProps {
     petId: string;
@@ -57,6 +53,35 @@ interface TimelineData {
     };
 }
 
+function LoadingSkeleton() {
+    return (
+        <div className="min-h-screen bg-slate-50">
+            <div className="sticky top-0 z-20 bg-white border-b border-slate-100">
+                <div className="max-w-xl mx-auto px-4 py-2.5 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 animate-pulse shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                        <div className="h-3.5 w-24 bg-slate-200 rounded-full animate-pulse" />
+                        <div className="h-2.5 w-12 bg-slate-200 rounded-full animate-pulse" />
+                    </div>
+                </div>
+            </div>
+            <div className="max-w-xl mx-auto px-4 py-3 space-y-0">
+                <div className="h-16 rounded-2xl bg-slate-200 animate-pulse mb-3" />
+                {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className="flex gap-3 py-4 border-b border-slate-100">
+                        <div className="w-9 h-9 rounded-full bg-slate-200 animate-pulse shrink-0" />
+                        <div className="flex-1 space-y-2 pt-0.5">
+                            <div className="h-3 w-28 bg-slate-200 rounded-full animate-pulse" />
+                            <div className="h-3 w-full bg-slate-200 rounded-full animate-pulse" />
+                            <div className="h-3 w-2/3 bg-slate-200 rounded-full animate-pulse" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export function WorldDashboard({ petId, canWriteLetter }: WorldDashboardProps) {
     const [data, setData] = useState<TimelineData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -84,89 +109,44 @@ export function WorldDashboard({ petId, canWriteLetter }: WorldDashboardProps) {
         return () => document.removeEventListener('visibilitychange', handler);
     }, [fetchData]);
 
-    // Safe fallbacks for atmosphere hook — always call hooks unconditionally
     const currentDay = data?.timeline.currentDay ?? 1;
     const currentZone = data?.timeline.currentZone ?? 'crystal_meadow';
+    const { timeOfDay, mounted } = useWorldAtmosphere(currentDay, currentZone);
 
-    const { timeOfDay, season, palette, seasonConfig, mounted } = useWorldAtmosphere(currentDay, currentZone);
-
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-slate-50">
-                <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-5">
-                    <div className="h-40 rounded-2xl bg-slate-200 animate-pulse" />
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                        <div className="lg:col-span-2 h-40 rounded-3xl bg-slate-200 animate-pulse" />
-                        <div className="h-40 rounded-2xl bg-slate-200 animate-pulse" />
-                    </div>
-                    <div className="h-12 rounded-2xl bg-slate-200 animate-pulse" />
-                    <div className="h-32 rounded-3xl bg-slate-200 animate-pulse" />
-                    <div className="h-24 rounded-3xl bg-slate-200 animate-pulse" />
-                </div>
-            </div>
-        );
-    }
+    if (isLoading) return <LoadingSkeleton />;
 
     if (error || !data) {
-        const petName = data?.pet.name ?? 'Your pet';
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center">
                 <p className="text-sm text-slate-400 italic text-center px-4">
-                    The Waterway is quiet right now. {petName} is somewhere nearby.
+                    The Waterway is quiet right now.
                 </p>
             </div>
         );
     }
 
-    const { pet, timeline, events, microEvents, worldState } = data;
+    const { pet, timeline, events, microEvents } = data;
+    const petPhotoUrl = pet.photos?.[0] ?? null;
 
-    const seasonConfigFull = SEASON_CONFIG[season];
-
-    // Letter status: derive from API response (safe access for optional fields)
     const rawData = data as unknown as Record<string, unknown>;
     const userLetters = (rawData.userLetters ?? rawData.sentLetters ?? []) as Array<{ created_at: string }>;
     const petLetters = (rawData.petLetters ?? rawData.deliverablePetLetters ?? []) as Array<{ status: string }>;
     const lastSentAt = userLetters[0]?.created_at ?? null;
     const hasUnreadReply = petLetters.some((l) => l.status === 'sent' || l.status === 'approved');
 
-    // Letter echo: most recent micro-event with category 'letter_echo'
-    const letterEcho = microEvents.find((m) => m.category === 'letter_echo') ?? null;
-
-    // Recent NPCs: unique npc_involved from last 5 events that have npc_involved
-    const recentNpcs = Array.from(
-        new Set(
-            events
-                .slice(0, 5)
-                .map((e) => e.npc_involved)
-                .filter((n): n is string => !!n)
-        )
-    );
-
     return (
-        <div className={`min-h-screen transition-colors duration-1000 ${mounted ? palette.bg : 'bg-slate-50'}`}>
-            <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-5">
-                <WorldHeader
-                    petName={pet.name}
-                    petPhotoUrl={pet.photos?.[0] ?? null}
-                    toThereOnDay={timeline.currentDay}
-                    currentZone={timeline.currentZone}
-                    currentZoneName={timeline.currentZoneName}
-                    timeOfDay={timeOfDay}
-                    season={season}
-                    mounted={mounted}
-                />
+        <div className="min-h-screen bg-slate-50">
+            <WorldHeader
+                petName={pet.name}
+                petPhotoUrl={petPhotoUrl}
+                toThereOnDay={timeline.currentDay}
+                currentZoneName={timeline.currentZoneName}
+                timeOfDay={timeOfDay}
+                mounted={mounted}
+            />
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div className="lg:col-span-2">
-                        <PetLocationHero
-                            zoneKey={timeline.currentZone}
-                            zoneName={timeline.currentZoneName}
-                            latestActivity={events[0]?.event_description ?? microEvents[0]?.content ?? null}
-                            mood={events[0]?.mood ?? null}
-                            worldSpark={worldState.atmosphere ?? null}
-                            seasonAtmosphere={seasonConfigFull.atmosphere}
-                        />
-                    </div>
+            <div className="max-w-xl mx-auto">
+                <div className="px-4 pt-3">
                     <LetterStatusWidget
                         petId={petId}
                         petName={pet.name}
@@ -176,25 +156,15 @@ export function WorldDashboard({ petId, canWriteLetter }: WorldDashboardProps) {
                     />
                 </div>
 
-                {letterEcho && (
-                    <LetterEchoCard
-                        echoContent={letterEcho.content}
-                        daysAgo={timeline.currentDay - letterEcho.tothereon_day}
-                        zone={letterEcho.zone}
+                <div className="mt-2 bg-white border-t border-slate-100">
+                    <WorldActivityStream
+                        events={events}
+                        microEvents={microEvents}
+                        currentTimeOfDay={timeOfDay}
+                        petName={pet.name}
+                        petPhotoUrl={petPhotoUrl}
                     />
-                )}
-
-                <NpcPresenceRow
-                    currentZone={timeline.currentZone}
-                    recentNpcNames={recentNpcs}
-                />
-
-                <WorldActivityStream
-                    events={events}
-                    microEvents={microEvents}
-                    currentTimeOfDay={timeOfDay}
-                    petName={pet.name}
-                />
+                </div>
             </div>
         </div>
     );
