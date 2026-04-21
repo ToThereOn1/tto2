@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 const CHUNK_SIZE = 30;
-const EVENTS_PER_RUN = 2;
+const EVENTS_PER_RUN = 8;
 const DAILY_CAP = 8;
 
 // ─── Type interfaces ──────────────────────────────────────────────────────────

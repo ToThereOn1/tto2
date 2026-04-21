@@ -18,15 +18,15 @@
         },
         {
             "path": "/api/cron/process-comment-replies",
-            "schedule": "0 */6 * * *"
+            "schedule": "0 2 * * *"
         },
         {
             "path": "/api/cron/micro-events",
-            "schedule": "0 1,7,13,19 * * *"
+            "schedule": "0 3 * * *"
         },
         {
             "path": "/api/cron/cleanup-micro-events",
-            "schedule": "0 3 * * 0"
+            "schedule": "0 4 * * *"
         }
     ]
 }
