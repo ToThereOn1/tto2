@@ -156,21 +156,26 @@ export async function GET(
             events.push({
                 id: event.id,
                 toThereOnDay: event.tothereon_day,
+                tothereon_day: event.tothereon_day,
                 type: 'status',
                 subtype: 'status_update',
-                eventType: event.event_type,  // raw event type (arrival, exploration, etc.)
+                eventType: event.event_type,
+                event_type: event.event_type,
                 typeName: event.event_title || 'Daily Update',
                 title: event.event_title || `Day ${event.tothereon_day}`,
                 description: event.event_description || '',
+                event_description: event.event_description || '',
                 content: event.event_description || '',
                 zone: event.zone || 'memory_village',
                 zoneName: getZoneDisplayName(event.zone || 'crystal_meadow'),
                 createdAt: event.created_at,
+                created_at: event.created_at,
                 isMock: false,
                 mood: event.mood || 'peaceful',
                 metadata: event.metadata,
                 language: event.event_language,
                 npcInvolved: event.npc_involved || null,
+                npc_involved: event.npc_involved || null,
             });
         });
 
@@ -185,7 +190,8 @@ export async function GET(
                 title: `Letter to ${pet.name}`,
                 content: letter.content,
                 createdAt: letter.created_at,
-                is_read: true, // User wrote it, so it's read
+                created_at: letter.created_at,
+                is_read: true,
                 isMock: false
             });
         });
@@ -201,6 +207,7 @@ export async function GET(
                 title: `Letter from ${pet.name}`,
                 content: letter.content,
                 createdAt: letter.created_at,
+                created_at: letter.created_at,
                 is_read: letter.is_read || false,
                 isMock: false,
                 current_tothereon_day: letter.current_tothereon_day ?? null,
