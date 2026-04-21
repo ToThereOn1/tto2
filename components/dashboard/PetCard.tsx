@@ -107,13 +107,13 @@ export function PetCard({ pet, lastFeedDate, drCompleted, canWriteLetter }: PetC
 
                     <div className="flex gap-2">
                         {pet.persona_generated ? (
-                            <Link href={`/dashboard/pets/${pet.id}`} className="flex-1">
+                            <Link href={`/dashboard/pets/${pet.id}/world`} className="flex-1">
                                 <motion.button
                                     whileHover={{ scale: 1.03 }}
                                     whileTap={{ scale: 0.96 }}
                                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                                     className="w-full py-4 rounded-2xl bg-gray-50/80 text-gray-900 font-bold hover:bg-gradient-to-r hover:from-blue-600 hover:to-indigo-600 hover:text-white transition-all group-hover:shadow-lg group-hover:shadow-blue-500/30 flex items-center justify-center gap-2">
-                                    Pet Feed <ArrowRight className="w-4 h-4" />
+                                    {pet.name}&apos;s World <ArrowRight className="w-4 h-4" />
                                 </motion.button>
                             </Link>
                         ) : (
